@@ -1,13 +1,38 @@
+$hl-color: #37f
+$outer-bg-color: #eee
+$inner-bg-color: #fff
+
+$nav-bg-color: #333
+$nav-active-bg-color: $hl-color
+$nav-active-color: #fff
+$nav-inactive-color: darken($nav-active-color, 50%)
+
+$foot-bg-color: $nav-bg-color
+$foot-color: lighten($nav-bg-color, 50%)
+
+$art-h1-color: #000
+$art-h2-color: #000
+$art-p-color: #444
+$art-bq-color: #666
+$art-time-color: #ccc
+$art-code-bg-color: #eee
+$art-code-border: 1px solid #ccc
+$art-code-color: #000
+
+/*******************************************/
+
 body
   margin: 0
-  background: #eee
+  background: $outer-bg-color
   font-family: sans
 
 main
   width: 1050px
-  background: #fff
+  background: $inner-bg-color
   margin: 20px auto 0 auto
-  box-shadow: #bbb 0 0 10px
+  box-shadow: darken($outer-bg-color,20%) 0 0 10px
+
+/*******************************************/
 
 header
   .title
@@ -18,12 +43,12 @@ header
     font-size: 150%
     text-transform: uppercase
     color: #111
-    border-bottom: 1px solid #ccc
+    border-bottom: 1px solid darken($inner-bg-color,10%)
 
 nav
   width: 100%
-  background: #333
-  border-bottom: 7px solid #37f
+  background: $nav-bg-color
+  border-bottom: 7px solid $hl-color
 
   ul
     margin: 0
@@ -38,54 +63,59 @@ nav
       display: inline-block
       padding: 0.8em 0.9em 0.8em 0.9em
       font-size: 0.9em
-      color: #777
+      color: $nav-inactive-color
       text-decoration: none
       font-weight: bold
       text-transform: uppercase
 
     a:hover, &.active a
-      background-color: #37f
-      color: #fff
+      background-color: $nav-active-bg-color
+      color: $nav-active-color
+
+/*******************************************/
 
 article
   padding: 1.5em
 
   h2
+    color: $art-h1-color
     margin: 0 0 0.3em 0
     font-size: 240%
 
   h3
+    color: $art-h2-color
     margin: 0
     font-size: 200%
 
   time
     display: block
-    color: #ccc
-    border-bottom: 1px dotted #ccc
+    color: $art-time-color
+    border-bottom: 1px dotted $art-time-color
     padding-bottom: 0.7em
     margin-bottom: 1em
 
-  p, blockquote
-    color: #444
-
   p
+    color: $art-p-color
     text-align: justify
 
   blockquote
+    color: $art-bq-color
     max-width: 70%
-    border-left: 5px solid #37f
+    border-left: 5px solid $hl-color
     margin-left: 0
     padding-left: 2em
-    color: #666
 
   pre
-    background: #eee
-    border: 1px solid #ccc
+    color: $art-code-color
+    background: $art-code-bg-color
+    border: $art-code-border
     padding: 0.6em
+
+/*******************************************/
 
 footer
   margin: 0
-  background-color: #333
-  color: #ccc
+  background-color: $foot-bg-color
+  color: $foot-color
   padding: 0.9em
   font-size: 0.7em
