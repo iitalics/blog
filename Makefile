@@ -1,4 +1,4 @@
 
 all:
-	cp $(wildcard static/*.html) output
+	racket lib/sitegen.rkt
 	sassc src/style.sass output/style.css
