@@ -23,12 +23,12 @@ $art-code-color: #000
 
 body
   margin: 0
-  background: $outer-bg-color
+  background-color: $outer-bg-color
   font-family: sans
 
 main
   width: 1050px
-  background: $inner-bg-color
+  background-color: $inner-bg-color
   margin: 20px auto 0 auto
   box-shadow: darken($outer-bg-color,20%) 0 0 10px
 
@@ -99,10 +99,12 @@ article
     text-align: justify
 
   blockquote
+    margin-left: 0
+
+  blockquote p
     color: $art-bq-color
     max-width: 70%
     border-left: 5px solid $hl-color
-    margin-left: 0
     padding-left: 2em
 
   pre
