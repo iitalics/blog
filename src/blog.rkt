@@ -28,7 +28,7 @@
 
 (define (HOMEPAGE blogpost-links)
   `(article
-    (h3 "Archive:")
+    (h3 "Archive")
     (hr)
     ,@blogpost-links))
 

@@ -117,31 +117,36 @@
 
 ;; [listof blogpost]
 (define ALL-BLOGPOSTS
-  (for*/list ([path (in-directory "src/posts" (λ (dir) #f))]
-              [filename (in-value (let-values ([(b fn dir?) (split-path path)]) fn))]
-              #:when (equal? (path-get-extension filename) #".md")
-              [page-url (in-value (path-replace-extension filename #""))]
-              [meta-path (in-value (path-replace-extension path #".meta.rktd"))]
-              [meta (in-value (if (file-exists? meta-path)
-                                  (with-input-from-file meta-path read)
-                                  '()))])
-    (define content
-      (parse-markdown path))
-    (define title
-      (match (assoc 'title meta)
-        [(list _ title) title]
-        [_ (for/first ([el (in-list content)]
-                       #:when (eq? (car el) 'h1))
-             (caddr el))]))
-    (define date
-      (match (assoc 'date meta)
-        [(list _ (list yr mn dy)) (gg:date yr mn dy)]
-        [_ (error "no date specified in metadata")]))
-    (define tags
-      (match (assoc 'tags meta)
-        [(list _ tags) tags]
-        [_ '()]))
-    (blogpost page-url title date tags content)))
+  (~> (for*/list ([path (in-directory "src/posts" (λ (dir) #f))]
+                  [filename (in-value (let-values ([(b fn dir?) (split-path path)]) fn))]
+                  #:when (equal? (path-get-extension filename) #".md")
+                  [page-url (in-value (path-replace-extension filename #""))]
+                  [meta-path (in-value (path-replace-extension path #".meta.rktd"))]
+                  [meta (in-value (if (file-exists? meta-path)
+                                      (with-input-from-file meta-path read)
+                                      '()))])
+        (define content
+          (parse-markdown path))
+        (define title
+          (match (assoc 'title meta)
+            [(list _ title) title]
+            [_ (for/first ([el (in-list content)]
+                           #:when (eq? (car el) 'h1))
+                 (caddr el))]))
+        (define date
+          (match (assoc 'date meta)
+            [(list _ (list yr mn dy)) (gg:date yr mn dy)]
+            [_ (error "no date specified in metadata")]))
+        (define tags
+          (match (assoc 'tags meta)
+            [(list _ tags) tags]
+            [_ '()]))
+        (blogpost page-url title date tags content))
+
+      ;; sort posts chronologically
+      (sort _ gg:date>? #:key blogpost-date)))
+
+
 
 (define ALL-TAGS
   (for*/fold ([tags (set)]
@@ -162,7 +167,6 @@
   (append
    (list (list 'index
                (~> ALL-BLOGPOSTS
-                   (sort _ gg:date>? #:key blogpost-date)
                    (map link-to-blogpost/x _)
                    HOMEPAGE
                    (entire-page/x #:title "Home"
