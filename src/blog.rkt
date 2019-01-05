@@ -42,5 +42,7 @@
   `{(about "About" ,about/x)})
 
 (define OTHER-NAV
-  '{(agda "Agda")
-    (racket "Racket")})
+  '{(agda "#agda")
+    (racket "#racket")
+    ("https://github.com/iitalics/" "Github")
+    ("http://www.ccs.neu.edu/home/milo/resumeMiloTurner.pdf" "CV")})

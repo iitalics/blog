@@ -50,9 +50,13 @@ nav
       font-weight: bold
       text-transform: uppercase
 
-    a:hover, &.active a
+    &.active a, &.inactive a:hover
       background-color: $nav-active-bg-color
       color: $nav-active-color
+
+    &.external a:hover
+      background-color: $nav-extern-bg-color
+      color: $nav-extern-color
 
 /*******************************************/
 

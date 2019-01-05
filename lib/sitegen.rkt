@@ -35,14 +35,17 @@
 
   (define nav/x
     `(nav (ul ,@(for/list ([x (in-list NAV)])
-                  (match-define (list* pg title _) x)
-                  (define cls
-                    (if (eq? pg active-pg)
-                        "active"
-                        ""))
+                  (match-define (list* target name _) x)
+                  (define attrs (if (string? target)
+                                    `([href ,target] [target "_blank"])
+                                    `([href ,(format "~a.html" target)])))
+                  (define cls (cond
+                                [(string? target) "external"]
+                                [(eq? target active-pg) "active"]
+                                [else "inactive"]))
                   `(li ([class ,cls])
-                       (a ([href ,(format "~a.html" pg)])
-                          ,title))))))
+                       (a ,attrs
+                          ,name))))))
 
   `(html ,meta/x
          (body (main (header ,title/x ,nav/x)
