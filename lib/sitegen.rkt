@@ -14,6 +14,11 @@
 ;; -------------------------------------------------------------------
 ;; General page template
 
+(define NAV
+  `{(index "Home")
+    ,@OTHER-PAGES
+    ,@OTHER-NAV})
+
 ;; xexpr -> xexpr
 ;;   #:title string
 ;;   [#:page symbol]
@@ -50,7 +55,7 @@
   `(html ,meta/x
          (body (main (header ,title/x ,nav/x)
                      ,content
-                     ,FOOTER))))
+                     ,footer/x))))
 
 ;; -------------------------------------------------------------------
 ;; Blogposts
@@ -65,7 +70,7 @@
 
 ;; blogpost               -> xexpr
 ;; blogpost #:page symbol -> xexpr
-(define (blogpost->xexpr bp #:page [active-pg #f])
+(define (blogpost/x bp #:page [active-pg #f])
 
   (define (transform-element e)
     (match e
@@ -85,10 +90,8 @@
 
 ;; blogpost -> xexpr
 (define (blogpost-meta/x bp)
-  (define date/pretty
-    (gg:~t (blogpost-date bp) DATE-FORMAT))
-  (define date/attr
-    (gg:~t (blogpost-date bp) "YYYY-MM-dd"))
+  (define date/pretty (gg:~t (blogpost-date bp) DATE-FORMAT))
+  (define date/attr (gg:~t (blogpost-date bp) "YYYY-MM-dd"))
   `(small
     (time ([datetime ,date/attr]) ,date/pretty)
     " | tagged: "
@@ -96,8 +99,7 @@
             `(a ([class "tag"]
                  [href ,(format "~a.html" t)])
                 ,(format "#~a" t)))
-          (add-between _ `(span ([class "tag-sep"])
-                                "\xb7")))))
+          (add-between _ `(span ([class "tag-sep"]) "\xb7")))))
 
 ;; string -> xexpr
 ;; string #:collection [listof blogpost] -> xexpr
@@ -159,43 +161,33 @@
 ;; -------------------------------------------------------------------
 ;; Assemble the site from parts
 
-(define NAV
-  `{(index "Home")
-    ,@OTHER-PAGES
-    ,@OTHER-NAV})
-
-(define ALL-PAGES
-  (append
-   (list (list 'index
-               (~> ALL-BLOGPOSTS
-                   (map link-to-blogpost/x _)
-                   HOMEPAGE
-                   (entire-page/x #:title "Home"
-                                  #:page 'index))))
-
-   ;; blogposts
-   (for/list ([bp (in-list ALL-BLOGPOSTS)])
-     (list (blogpost-page-url bp)
-           (blogpost->xexpr bp)))
-
-   ;; tags
-   (for/list ([t (in-list ALL-TAGS)])
-     (list t (all-tagged/x t)))
-
-   ;; other pages
-   (for/list ([x (in-list OTHER-PAGES)])
-     (match-define (list pg title content) x)
-     (list pg (entire-page/x #:title title
-                             #:page pg
-                             content)))))
-
-;; -------------------------------------------------------------------
-;; Render to files
-
-(for ([x (in-list ALL-PAGES)])
-  (match-define (list pg xexpr) x)
+(define (render pg xexpr)
   (with-output-to-file
     (format "output/~a.html" pg)
     #:exists 'replace
     (λ ()
       (xml:write-xexpr xexpr))))
+
+;;index
+(render 'index
+        (~> ALL-BLOGPOSTS
+            (map link-to-blogpost/x _)
+            homepage/x
+            (entire-page/x #:title "Home"
+                           #:page 'index)))
+
+;; blogposts
+(for ([bp (in-list ALL-BLOGPOSTS)])
+  (render (blogpost-page-url bp)
+          (blogpost/x bp)))
+
+;; tags
+(for ([t (in-list ALL-TAGS)])
+  (render t (all-tagged/x t)))
+
+;; other pages
+(for ([x (in-list OTHER-PAGES)])
+  (match-define (list* pg title content _) x)
+  (render pg (entire-page/x #:title title
+                            #:page pg
+                            content)))

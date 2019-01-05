@@ -1,21 +1,18 @@
 #lang racket/base
 (provide
  BLOG-TITLE
- FOOTER
- HOMEPAGE
+ footer/x
+ homepage/x
  STYLESHEETS
  DATE-FORMAT
  OTHER-PAGES
  OTHER-NAV)
 
 ;; -------------------------------------------------------------------
-;; General info
+;; Options
 
 (define BLOG-TITLE
   "Milo Turner")
-
-(define FOOTER
-  `(footer "\xa9 Milo Turner"))
 
 (define STYLESHEETS
   '("style.css"))
@@ -24,9 +21,12 @@
   "MM/dd/YYYY")
 
 ;; -------------------------------------------------------------------
-;; Non-blogpost pages
+;; X expressions
 
-(define (HOMEPAGE blogpost-links)
+(define footer/x
+  `(footer "\xa9 Milo Turner"))
+
+(define (homepage/x blogpost-links)
   `(article
     (h3 "Archive")
     (hr)
@@ -37,6 +37,9 @@
     (h2 "About")
     (hr)
     (h3 "WIP")))
+
+;; -------------------------------------------------------------------
+;; Nav
 
 (define OTHER-PAGES
   `{(about "About" ,about/x)})
