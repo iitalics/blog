@@ -1,7 +1,7 @@
-/* $hl-color: #37f */
+$hl-color: #37f
 /* $hl-color: #a2c */
 /* $hl-color: #2c3 */
-$hl-color: #d23
+/* $hl-color: #d23 */
 $outer-bg-color: #eee
 $inner-bg-color: #fff
 $outer-shadow: #bbb 0 0 10px
@@ -23,18 +23,28 @@ $art-h1-color: #000
 $art-h2-color: #000
 $art-p-color: #444
 $art-bq-color: #666
-$art-time-color: #bbb
+$art-small-color: #bbb
 $art-code-bg-color: #eee
 $art-code-border: 1px solid #ccc
 $art-code-color: #000
+$art-line: 1px dotted $art-small-color
+
+$linkto-color: #222
+$linkto-color-hover: $hl-color
+$linkto-size: 130%
+$tag-color: #444
+$tag-color-hover: $hl-color
 
 $art-h1-size: 240%
 $art-h2-size: 180%
-$art-time-size: 90%
+$art-small-size: 90%
 $art-bq-size: 100%
 $art-code-size: 100%
 
 /*******************************************/
+
+a
+  text-decoration: none
 
 body
   margin: 0
@@ -102,13 +112,18 @@ article
     color: $art-h2-color
     font-size: $art-h2-size
 
-  time
+  small
     display: block
-    border-bottom: 1px dotted $art-time-color
+    border-bottom: $art-line
     padding-bottom: 0.7em
     margin-bottom: 1em
-    color: $art-time-color
-    font-size: $art-time-size
+    color: $art-small-color
+    font-size: $art-small-size
+
+  hr
+    border-top: $art-line
+    border-bottom: none
+    margin: 0.5em 0 1.3em 0
 
   p
     text-align: justify
@@ -130,6 +145,28 @@ article
     padding: 0.6em
     color: $art-code-color
     font-size: $art-code-size
+
+/*******************************************/
+
+div.link-to-post
+  h4
+    margin: 0
+    padding-bottom: 0.5em
+    color: $linkto-color
+    font-size: $linkto-size
+
+    &:hover
+      color: $linkto-color-hover
+
+.tag
+  text-decoration: underline
+  color: $tag-color
+
+  &:hover
+    color: $tag-color-hover
+
+.tag-sep
+  padding: 0 0.1em 0 0.1em
 
 /*******************************************/
 

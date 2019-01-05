@@ -4,6 +4,7 @@
  racket/date
  racket/path
  racket/list
+ racket/set
  markdown
  threading
  (prefix-in xml: xml)
@@ -63,21 +64,13 @@
 ;; blogpost #:page symbol -> xexpr
 (define (blogpost->xexpr bp #:page [active-pg #f])
 
-  ;; xexpr -> [listof xexpr]
   (define (transform-element e)
     (match e
-      ;; "lower" the header tags, and insert timestring after h1
+      ;; "lower" the header tags, and insert meta info after h1
       [`(h3 ,x ...) (list `(h4 ,@x))]
       [`(h2 ,x ...) (list `(h3 ,@x))]
-      [`(h1 ,x ...) (list `(h2 ,@x)
-                          `(time ([datetime ,date/attr])
-                                 ,date/pretty))]
+      [`(h1 ,x ...) (list `(h2 ,@x) (blogpost-meta/x bp))]
       [_ (list e)]))
-
-  (define date/pretty
-    (gg:~t (blogpost-date bp) "MMMM dd, YYYY"))
-  (define date/attr
-    (gg:~t (blogpost-date bp) "YYYY-MM-dd"))
 
   (define body/x
     `(article ,@(append-map transform-element
@@ -86,6 +79,41 @@
   (entire-page/x #:title (blogpost-title bp)
                  #:page active-pg
                  body/x))
+
+;; blogpost -> xexpr
+(define (blogpost-meta/x bp)
+  (define date/pretty
+    (gg:~t (blogpost-date bp) DATE-FORMAT))
+  (define date/attr
+    (gg:~t (blogpost-date bp) "YYYY-MM-dd"))
+  `(small
+    (time ([datetime ,date/attr]) ,date/pretty)
+    " | tagged: "
+    ,@(~> (for/list ([t (in-list (blogpost-tags bp))])
+            `(a ([class "tag"]
+                 [href ,(format "~a.html" t)])
+                ,(format "#~a" t)))
+          (add-between _ `(span ([class "tag-sep"])
+                                "\xb7")))))
+
+;; string -> xexpr
+;; string #:collection [listof blogpost] -> xexpr
+(define (all-tagged/x t #:collection [bps ALL-BLOGPOSTS])
+  (entire-page/x #:title (format "Tagged #~a" t)
+                 #:page t
+                 `(article
+                   (h3 ,(format "Posts tagged \"#~a\"" t))
+                   (hr)
+                   ,@(for/list ([bp (in-list bps)]
+                                #:when (memq t (blogpost-tags bp)))
+                       (link-to-blogpost/x bp)))))
+
+;; blogpost -> xexpr
+(define (link-to-blogpost/x bp)
+  `(div ([class "link-to-post"])
+        (a ([href ,(format "~a.html" (blogpost-page-url bp))])
+           (h4 ,(blogpost-title bp)))
+        ,(blogpost-meta/x bp)))
 
 ;; [listof blogpost]
 (define ALL-BLOGPOSTS
@@ -115,43 +143,52 @@
         [_ '()]))
     (blogpost page-url title date tags content)))
 
-(define HOMEPAGE-BLOGPOST
-  (argmax (λ~> blogpost-date gg:->jdn)
-          ALL-BLOGPOSTS))
+(define ALL-TAGS
+  (for*/fold ([tags (set)]
+              #:result (set->list tags))
+             ([bp (in-list ALL-BLOGPOSTS)]
+              [t (in-list (blogpost-tags bp))])
+    (set-add tags t)))
 
 ;; -------------------------------------------------------------------
 ;; Assemble the site from parts
 
 (define NAV
-  (cons (list 'index "Home")
-        OTHER-PAGES))
+  `{(index "Home")
+    ,@OTHER-PAGES
+    ,@OTHER-NAV})
 
 (define ALL-PAGES
   (append
    (list (list 'index
-               (blogpost-title HOMEPAGE-BLOGPOST)
-               (blogpost->xexpr HOMEPAGE-BLOGPOST
-                                #:page 'index)))
+               (~> ALL-BLOGPOSTS
+                   (sort _ gg:date>? #:key blogpost-date)
+                   (map link-to-blogpost/x _)
+                   HOMEPAGE
+                   (entire-page/x #:title "Home"
+                                  #:page 'index))))
 
    ;; blogposts
    (for/list ([bp (in-list ALL-BLOGPOSTS)])
      (list (blogpost-page-url bp)
-           (blogpost-title bp)
            (blogpost->xexpr bp)))
+
+   ;; tags
+   (for/list ([t (in-list ALL-TAGS)])
+     (list t (all-tagged/x t)))
 
    ;; other pages
    (for/list ([x (in-list OTHER-PAGES)])
      (match-define (list pg title content) x)
-     (list pg title (entire-page/x #:title title
-                                   #:page pg
-                                   content)))))
+     (list pg (entire-page/x #:title title
+                             #:page pg
+                             content)))))
 
 ;; -------------------------------------------------------------------
 ;; Render to files
 
 (for ([x (in-list ALL-PAGES)])
-  (match-define (list pg title xexpr) x)
-  (printf "generating: ~v\n" title)
+  (match-define (list pg xexpr) x)
   (with-output-to-file
     (format "output/~a.html" pg)
     #:exists 'replace

@@ -1,9 +1,12 @@
 #lang racket/base
 (provide
  BLOG-TITLE
- STYLESHEETS
  FOOTER
- OTHER-PAGES)
+ HOMEPAGE
+ STYLESHEETS
+ DATE-FORMAT
+ OTHER-PAGES
+ OTHER-NAV)
 
 ;; -------------------------------------------------------------------
 ;; General info
@@ -17,19 +20,27 @@
 (define STYLESHEETS
   '("style.css"))
 
+(define DATE-FORMAT
+  "MM/dd/YYYY")
+
 ;; -------------------------------------------------------------------
 ;; Non-blogpost pages
+
+(define (HOMEPAGE blogpost-links)
+  `(article
+    (h3 "Archive:")
+    (hr)
+    ,@blogpost-links))
 
 (define about/x
   `(article
     (h2 "About")
-    (h3 "WIP")))
-
-(define archive/x
-  `(article
-    (h2 "Archive")
+    (hr)
     (h3 "WIP")))
 
 (define OTHER-PAGES
-  `{(archive "Archive" ,archive/x)
-    (about "About" ,about/x)})
+  `{(about "About" ,about/x)})
+
+(define OTHER-NAV
+  '{(agda "Agda")
+    (racket "Racket")})
