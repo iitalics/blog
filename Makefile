@@ -6,7 +6,7 @@ html:
 	racket lib/sitegen.rkt
 
 css:
-	sassc src/style.sass output/style.css
+	sassc lib/style.sass output/style.css
 
 clean:
 	rm -rf output
