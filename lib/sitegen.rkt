@@ -68,6 +68,8 @@
 (struct blogpost [page-url title date tags content]
   #:transparent)
 
+;; Returns xexpr of entire blogpost rendered.
+;;
 ;; blogpost               -> xexpr
 ;; blogpost #:page symbol -> xexpr
 (define (blogpost/x bp #:page [active-pg #f])
@@ -88,6 +90,8 @@
                  #:page active-pg
                  body/x))
 
+;; Returns the xexpr of the meta info line (date, tags) for a blogpost.
+;;
 ;; blogpost -> xexpr
 (define (blogpost-meta/x bp)
   (define date/pretty (gg:~t (blogpost-date bp) DATE-FORMAT))
@@ -101,8 +105,10 @@
                 ,(format "#~a" t)))
           (add-between _ `(span ([class "tag-sep"]) "\xb7")))))
 
-;; string -> xexpr
-;; string #:collection [listof blogpost] -> xexpr
+;; Returns the xexpr for the page listing all blogposts with the given tag.
+;;
+;; symbol -> xexpr
+;; symbol #:collection [listof blogpost] -> xexpr
 (define (all-tagged/x t #:collection [bps ALL-BLOGPOSTS])
   (entire-page/x #:title (format "Tagged #~a" t)
                  #:page t
@@ -113,6 +119,8 @@
                                 #:when (memq t (blogpost-tags bp)))
                        (link-to-blogpost/x bp)))))
 
+;; Returns the xexpr element for a large link to the given blogpost.
+;;
 ;; blogpost -> xexpr
 (define (link-to-blogpost/x bp)
   `(div ([class "link-to-post"])
@@ -151,6 +159,7 @@
       ;; sort posts chronologically
       (sort _ gg:date>? #:key blogpost-date)))
 
+;; [listof symbol]
 (define ALL-TAGS
   (for*/fold ([tags (set)]
               #:result (set->list tags))
@@ -161,6 +170,9 @@
 ;; -------------------------------------------------------------------
 ;; Assemble the site from parts
 
+;; Render & save the given xexpr to the file with the given page name.
+;;
+;; symbol xexpr -> void
 (define (render pg xexpr)
   (with-output-to-file
     (format "output/~a.html" pg)
@@ -168,7 +180,7 @@
     (λ ()
       (xml:write-xexpr xexpr))))
 
-;;index
+;; render index
 (render 'index
         (~> ALL-BLOGPOSTS
             (map link-to-blogpost/x _)
@@ -176,16 +188,16 @@
             (entire-page/x #:title "Home"
                            #:page 'index)))
 
-;; blogposts
+;; render all blogposts
 (for ([bp (in-list ALL-BLOGPOSTS)])
   (render (blogpost-page-url bp)
           (blogpost/x bp)))
 
-;; tags
+;; render all tags
 (for ([t (in-list ALL-TAGS)])
   (render t (all-tagged/x t)))
 
-;; other pages
+;; render any other pages
 (for ([x (in-list OTHER-PAGES)])
   (match-define (list* pg title content _) x)
   (render pg (entire-page/x #:title title
