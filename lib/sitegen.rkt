@@ -117,7 +117,7 @@
 
 ;; [listof blogpost]
 (define ALL-BLOGPOSTS
-  (~> (for*/list ([path (in-directory "src/posts" (λ (dir) #f))]
+  (~> (for*/list ([path (in-directory "posts" (λ (dir) #f))]
                   [filename (in-value (let-values ([(b fn dir?) (split-path path)]) fn))]
                   #:when (equal? (path-get-extension filename) #".md")
                   [page-url (in-value (path-replace-extension filename #""))]
