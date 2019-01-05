@@ -1,6 +1,11 @@
 $hl-color: #37f
 $outer-bg-color: #eee
 $inner-bg-color: #fff
+$outer-shadow: #bbb 0 0 10px
+
+$hdr-color: #111
+$hdr-size: 150%
+$hdr-line: 1px solid #eee
 
 $nav-bg-color: #333
 $nav-active-bg-color: $hl-color
@@ -9,15 +14,22 @@ $nav-inactive-color: darken($nav-active-color, 50%)
 
 $foot-bg-color: $nav-bg-color
 $foot-color: lighten($nav-bg-color, 50%)
+$foot-size: 70%
 
 $art-h1-color: #000
 $art-h2-color: #000
 $art-p-color: #444
 $art-bq-color: #666
-$art-time-color: #ccc
+$art-time-color: #bbb
 $art-code-bg-color: #eee
 $art-code-border: 1px solid #ccc
 $art-code-color: #000
+
+$art-h1-size: 240%
+$art-h2-size: 180%
+$art-time-size: 90%
+$art-bq-size: 100%
+$art-code-size: 100%
 
 /*******************************************/
 
@@ -30,7 +42,7 @@ main
   width: 1050px
   background-color: $inner-bg-color
   margin: 20px auto 0 auto
-  box-shadow: darken($outer-bg-color,20%) 0 0 10px
+  box-shadow: $outer-shadow
 
 /*******************************************/
 
@@ -40,10 +52,10 @@ header
   h1
     display: inline-block
     margin: 0
-    font-size: 150%
     text-transform: uppercase
-    color: #111
-    border-bottom: 1px solid darken($inner-bg-color,10%)
+    color: $hdr-color
+    font-size: $hdr-size
+    border-bottom: $hdr-line
 
 nav
   width: 100%
@@ -78,46 +90,49 @@ article
   padding: 1.5em
 
   h2
-    color: $art-h1-color
     margin: 0 0 0.3em 0
-    font-size: 240%
+    color: $art-h1-color
+    font-size: $art-h1-size
 
   h3
-    color: $art-h2-color
     margin: 0
-    font-size: 200%
+    color: $art-h2-color
+    font-size: $art-h2-size
 
   time
     display: block
-    color: $art-time-color
     border-bottom: 1px dotted $art-time-color
     padding-bottom: 0.7em
     margin-bottom: 1em
+    color: $art-time-color
+    font-size: $art-time-size
 
   p
-    color: $art-p-color
     text-align: justify
+    color: $art-p-color
 
   blockquote
     margin-left: 0
 
   blockquote p
-    color: $art-bq-color
     max-width: 70%
     border-left: 5px solid $hl-color
     padding-left: 2em
+    color: $art-bq-color
+    font-size: $art-bq-size
 
   pre
-    color: $art-code-color
     background: $art-code-bg-color
     border: $art-code-border
     padding: 0.6em
+    color: $art-code-color
+    font-size: $art-code-size
 
 /*******************************************/
 
 footer
   margin: 0
   background-color: $foot-bg-color
-  color: $foot-color
   padding: 0.9em
-  font-size: 0.7em
+  color: $foot-color
+  font-size: $foot-size
