@@ -6,7 +6,8 @@
  racket/date
  racket/path
  racket/list
- markdown)
+ markdown
+ (prefix-in gg: gregor))
 
 ;; -------------------------------------------------------------------
 ;; General page template
@@ -85,15 +86,14 @@
                                #:when (eq? (car el) 'h1))
                      (caddr el))])
               (match (assoc 'date meta)
-                [(list _ (list yr mn dy)) (make-date 0 0 0 dy mn yr 0 0 #t 0)]
-                [_ (current-date)])
+                [(list _ (list yr mn dy)) (gg:date yr mn dy)]
+                [_ (error "no date specified in metadata")])
               (match (assoc 'tags meta)
                 [(list _ tags) tags]
                 [_ '()])
               content)))
 
-(define (blogpost->xexpr bp
-                         #:page [active-pg #f])
+(define (blogpost->xexpr bp #:page [active-pg #f])
 
   ;; xexpr -> [listof xexpr]
   (define (transform-element e)
@@ -107,11 +107,11 @@
 
   (define date/pretty
     (parameterize ([date-display-format 'american])
-      (date->string (blogpost-date bp))))
+      (gg:~t (blogpost-date bp) "MMMM dd, YYYY")))
 
   (define date/attr
     (parameterize ([date-display-format 'iso-8601])
-      (date->string (blogpost-date bp))))
+      (gg:~t (blogpost-date bp) "YYYY-MM-dd")))
 
   (define body/x
     `(article ,@(append-map transform-element
