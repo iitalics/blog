@@ -146,8 +146,6 @@
       ;; sort posts chronologically
       (sort _ gg:date>? #:key blogpost-date)))
 
-
-
 (define ALL-TAGS
   (for*/fold ([tags (set)]
               #:result (set->list tags))
