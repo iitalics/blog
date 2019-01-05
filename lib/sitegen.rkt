@@ -4,7 +4,7 @@
  xml
  "../src/index.rkt")
 
-(for ([x (in-list pages)])
+(for ([x (in-list ALL-PAGES)])
   (match-define (list pg title xexpr) x)
   (printf "generating: ~v\n" title)
   (with-output-to-file

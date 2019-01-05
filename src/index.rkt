@@ -1,5 +1,6 @@
 #lang racket/base
-(provide pages)
+(provide
+ ALL-PAGES)
 
 (require
  racket/match
@@ -7,7 +8,9 @@
  racket/path
  racket/list
  markdown
+ threading
  (prefix-in gg: gregor))
+
 
 ;; -------------------------------------------------------------------
 ;; General page template
@@ -15,50 +18,46 @@
 (define BLOG-TITLE
   "Milo Turner")
 
-(define NAV
-  `{(index "Home")
-    (agda "Agda")
-    (rkt "Racket")
-    (archive "Archive")
-    (about "About")})
+(define STYLESHEETS
+  '("style.css"))
 
-(define footer/x
-  "\xa9 Milo Turner")
+(define FOOTER
+  `(footer "\xa9 Milo Turner"))
 
 ;; string xexpr -> xexpr
 (define (entire-page/x #:title title
-                       #:page [pg #f]
+                       #:page [active-pg #f]
                        content)
-  `(html (head (title ,(format "~a - ~a" BLOG-TITLE title))
-               (meta ([charset "utf8"]))
-               ,@css/x)
-         (body (main (header ,title/x ,(nav/x pg))
+
+  (define meta/x
+    `(head (title ,(format "~a - ~a" BLOG-TITLE title))
+           (meta ([charset "utf8"]))
+           ,@(for/list ([ss (in-list STYLESHEETS)])
+               `(link ([href ,ss] [rel "stylesheet"])))))
+
+  (define title/x
+    `(div ([class "title"])
+          (a ([href "index.html"])
+             (h1 ,BLOG-TITLE))))
+
+  (define nav/x
+    `(nav (ul ,@(for/list ([x (in-list NAV)])
+                  (match-define (list* pg title _) x)
+                  (define cls
+                    (if (eq? pg active-pg)
+                        "active"
+                        ""))
+                  `(li ([class ,cls])
+                       (a ([href ,(format "~a.html" pg)])
+                          ,title))))))
+
+  `(html ,meta/x
+         (body (main (header ,title/x ,nav/x)
                      ,content
-                     (footer ,footer/x)))))
-
-(define css/x
-  (list `(link ([href "style.css"]
-                [rel "stylesheet"]))))
-
-(define title/x
-  `(div ([class "title"])
-        (a ([href "index.html"])
-           (h1 ,BLOG-TITLE))))
-
-;; symbol -> xexpr
-(define (nav/x active-pg)
-  `(nav (ul ,@(for/list ([x (in-list NAV)])
-                (match-define (list pg title) x)
-                (define cls
-                  (if (eq? pg active-pg)
-                      "active"
-                      ""))
-                `(li ([class ,cls])
-                     (a ([href ,(format "~a.html" pg)])
-                        ,title))))))
+                     ,FOOTER))))
 
 ;; -------------------------------------------------------------------
-;; Blogpost pages
+;; Blogposts
 
 ;; page-url : string
 ;; title : string
@@ -68,31 +67,8 @@
 (struct blogpost [page-url title date tags content]
   #:transparent)
 
-;; [listof blogpost]
-(define blogposts
-  (for*/list ([path (in-directory "src/posts" (λ (dir) #f))]
-              [filename (in-value (let-values ([(b fn dir?) (split-path path)]) fn))]
-              #:when (equal? (path-get-extension filename) #".md")
-              [page-url (in-value (path-replace-extension filename #""))]
-              [meta-path (in-value (path-replace-extension path #".meta.rktd"))]
-              [meta (in-value (if (file-exists? meta-path)
-                                  (with-input-from-file meta-path read)
-                                  '()))])
-    (define content (parse-markdown path))
-    (blogpost page-url
-              (match (assoc 'title meta)
-                [(list _ title) title]
-                [_ (for/first ([el (in-list content)]
-                               #:when (eq? (car el) 'h1))
-                     (caddr el))])
-              (match (assoc 'date meta)
-                [(list _ (list yr mn dy)) (gg:date yr mn dy)]
-                [_ (error "no date specified in metadata")])
-              (match (assoc 'tags meta)
-                [(list _ tags) tags]
-                [_ '()])
-              content)))
-
+;; blogpost               -> xexpr
+;; blogpost #:page symbol -> xexpr
 (define (blogpost->xexpr bp #:page [active-pg #f])
 
   ;; xexpr -> [listof xexpr]
@@ -106,12 +82,9 @@
       [_ (list e)]))
 
   (define date/pretty
-    (parameterize ([date-display-format 'american])
-      (gg:~t (blogpost-date bp) "MMMM dd, YYYY")))
-
+    (gg:~t (blogpost-date bp) "MMMM dd, YYYY"))
   (define date/attr
-    (parameterize ([date-display-format 'iso-8601])
-      (gg:~t (blogpost-date bp) "YYYY-MM-dd")))
+    (gg:~t (blogpost-date bp) "YYYY-MM-dd"))
 
   (define body/x
     `(article ,@(append-map transform-element
@@ -121,57 +94,76 @@
                  #:page active-pg
                  body/x))
 
+;; [listof blogpost]
+(define ALL-BLOGPOSTS
+  (for*/list ([path (in-directory "src/posts" (λ (dir) #f))]
+              [filename (in-value (let-values ([(b fn dir?) (split-path path)]) fn))]
+              #:when (equal? (path-get-extension filename) #".md")
+              [page-url (in-value (path-replace-extension filename #""))]
+              [meta-path (in-value (path-replace-extension path #".meta.rktd"))]
+              [meta (in-value (if (file-exists? meta-path)
+                                  (with-input-from-file meta-path read)
+                                  '()))])
+    (define content
+      (parse-markdown path))
+    (define title
+      (match (assoc 'title meta)
+        [(list _ title) title]
+        [_ (for/first ([el (in-list content)]
+                       #:when (eq? (car el) 'h1))
+             (caddr el))]))
+    (define date
+      (match (assoc 'date meta)
+        [(list _ (list yr mn dy)) (gg:date yr mn dy)]
+        [_ (error "no date specified in metadata")]))
+    (define tags
+      (match (assoc 'tags meta)
+        [(list _ tags) tags]
+        [_ '()]))
+    (blogpost page-url title date tags content)))
+
+(define HOMEPAGE-BLOGPOST
+  (argmax (λ~> blogpost-date gg:->jdn)
+          ALL-BLOGPOSTS))
+
 ;; -------------------------------------------------------------------
 ;; Non-blogpost pages
 
 (define about/x
   `(article
     (h2 "About")
-    (h3 "Nothing here.")
-    (p "Bacon ipsum dolor amet tongue pastrami jerky spare ribs boudin cow
-corned beef. Ham hock chicken shoulder brisket tri-tip ground round pig short
-ribs sirloin swine cupim fatback tail tenderloin chuck. Ham burgdoggen venison
-tenderloin doner brisket pork chop, rump strip steak chuck tail. Salami pork
-chop cow, turkey leberkas pancetta swine ham hock ground round shank hamburger
-alcatra kielbasa venison. Kielbasa ball tip bacon spare ribs meatloaf
-porchetta beef ribs biltong strip steak ground round ribeye. Leberkas shank
-venison filet mignon buffalo picanha. Strip steak beef ribs pastrami shank
-corned beef.")))
+    (h3 "WIP")))
 
 (define archive/x
   `(article
     (h2 "Archive")
-    (h3 "Nothing here.")))
+    (h3 "WIP")))
 
-(define other-pages
-  `{(about "About" ,about/x)
-    (archive "Archive" ,archive/x)})
+(define OTHER-PAGES
+  `{(archive "Archive" ,archive/x)
+    (about "About" ,about/x)})
 
 ;; -------------------------------------------------------------------
 
-(define homepage-blogpost
-  (car blogposts))
+(define NAV
+  (cons (list 'index "Home")
+        OTHER-PAGES))
 
-(define pages
+(define ALL-PAGES
   (append
-   ;; pages that are just index pages for now
-   (for/list ([n `{(index "Home")
-                   (agda "Agda")
-                   (rkt "Racket")}])
-     (match-define (list pg title) n)
-     (list pg
-           title
-           (blogpost->xexpr homepage-blogpost
-                            #:page pg)))
+   (list (list 'index
+               (blogpost-title HOMEPAGE-BLOGPOST)
+               (blogpost->xexpr HOMEPAGE-BLOGPOST
+                                #:page 'index)))
 
    ;; blogposts
-   (for/list ([bp (in-list blogposts)])
+   (for/list ([bp (in-list ALL-BLOGPOSTS)])
      (list (blogpost-page-url bp)
            (blogpost-title bp)
            (blogpost->xexpr bp)))
 
    ;; other pages
-   (for/list ([x (in-list other-pages)])
+   (for/list ([x (in-list OTHER-PAGES)])
      (match-define (list pg title content) x)
      (list pg title (entire-page/x #:title title
                                    #:page pg
