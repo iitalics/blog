@@ -8,7 +8,7 @@
  threading
  (prefix-in xml: xml)
  (prefix-in gg: gregor)
- "../src/index.rkt")
+ "../src/blog.rkt")
 
 ;; -------------------------------------------------------------------
 ;; General page template
