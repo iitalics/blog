@@ -132,14 +132,21 @@
 (define ALL-BLOGPOSTS
   (~> (for*/list ([path (in-directory "posts" (λ (dir) #f))]
                   [filename (in-value (let-values ([(b fn dir?) (split-path path)]) fn))]
-                  #:when (equal? (path-get-extension filename) #".md")
-                  [page-url (in-value (path-replace-extension filename #""))]
-                  [meta-path (in-value (path-replace-extension path #".meta.rktd"))]
-                  [meta (in-value (if (file-exists? meta-path)
-                                      (with-input-from-file meta-path read)
-                                      '()))])
+                  #:when (equal? (path-get-extension filename) #".md"))
+
+        ;; load metadata
+        (define meta-path
+          (path-replace-extension path #".meta.rktd"))
+        (define meta
+          (if (file-exists? meta-path)
+              (with-input-from-file meta-path read)
+              '()))
+
+        ;; parse markdown content and extract data from it
         (define content
           (parse-markdown path))
+        (define page-url
+          (path-replace-extension filename #""))
         (define title
           (match (assoc 'title meta)
             [(list _ title) title]
@@ -154,6 +161,7 @@
           (match (assoc 'tags meta)
             [(list _ tags) tags]
             [_ '()]))
+
         (blogpost page-url title date tags content))
 
       ;; sort posts chronologically
