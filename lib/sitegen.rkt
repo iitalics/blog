@@ -74,12 +74,20 @@
 ;; blogpost #:page symbol -> xexpr
 (define (blogpost/x bp #:page [active-pg #f])
 
+  (define (transform-p-element e)
+    (match e
+      [`(a ,attrs ,txt ...)
+       ;; Make links open in new window
+       `(a ([target "_blank"] ,@attrs) ,@txt)]
+      [_ e]))
+
   (define (transform-element e)
     (match e
       ;; "lower" the header tags, and insert meta info after h1
       [`(h3 ,x ...) (list `(h4 ,@x))]
       [`(h2 ,x ...) (list `(h3 ,@x))]
       [`(h1 ,x ...) (list `(h2 ,@x) (blogpost-meta/x bp))]
+      [`(p ,x ...) (list `(p ,@(map transform-p-element x)))]
       [_ (list e)]))
 
   (define body/x
